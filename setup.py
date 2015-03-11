@@ -5,7 +5,7 @@ from setuptools import setup
 import globussh
 
 setup(name='globussh',
-      version=slict.__version__,
+      version=globussh.__version__,
       description='Globus CLI bindings',
       url='http://github.com/maxhutch/globussh/',
       author='https://raw.github.com/maxhutch/globussh/master/AUTHORS.md',
