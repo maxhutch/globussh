@@ -5,17 +5,37 @@ def globus_exists(path):
     return not len(foo) == 0
 
 
-def transfer_sync(transfer, label="globussh_sync"):
+def transfer_sync(transfer, 
+                  label="globussh_sync", 
+                  activate=False, 
+                  sync=3,
+                  deadline=None,
+                  encrypt=False,
+                  verify=False,
+                  delete=False):
     taskid = check_output(args=["/usr/bin/ssh",
                                 "globus",
                                 "transfer --generate-id"]
                           ).decode("utf-8")
-    p = Popen(args=["/usr/bin/ssh",
-                    "globus",
-                    "transfer",
-                    "-s 3 ",
-                    #"-g",
-                    "--label={:s}".format(label),
+    opts = []
+    if sync is not None:
+      opts.append("-s {:d}".format(sync))
+    if activate:
+      opts.append("-g")
+    if deadline is not None:
+      opts.append("-d {:s}".format(deadline))
+    if encrypt:
+      opts.append("--encrypt")
+    if verify:
+      opts.append("--verify-checksum")
+    else:
+      opts.append("--no-verify-checksum")
+    if delete:
+      opts.append("--delete")
+
+    p = Popen(args=["/usr/bin/ssh", "globus", "transfer"] 
+                 + opts
+                 + ["--label={:s}".format(label),
                     "--taskid={:s}".format(taskid)],
                     universal_newlines=True,
                     stdin=PIPE)
@@ -24,12 +44,33 @@ def transfer_sync(transfer, label="globussh_sync"):
     call(args=["/usr/bin/ssh", "globus", "wait -q {:s}".format(taskid)])
 
 
-def transfer_async(transfer, label="globussh_async"):
-    p = Popen(args=["/usr/bin/ssh",
-                    "globus",
-                    "transfer",
-                    "-s 3 ",
-                    "--label={:s}".format(label)],
+def transfer_async(transfer,
+                   label="globussh_async", 
+                   activate=False, 
+                   sync=3,
+                   deadline=None,
+                   encrypt=False,
+                   verify=False,
+                   delete=False):
+    opts = []
+    if sync is not None:
+      opts.append("-s {:d}".format(sync))
+    if activate:
+      opts.append("-g")
+    if deadline is not None:
+      opts.append("-d {:s}".format(deadline))
+    if encrypt:
+      opts.append("--encrypt")
+    if verify:
+      opts.append("--verify-checksum")
+    else:
+      opts.append("--no-verify-checksum")
+    if delete:
+      opts.append("--delete")
+
+    p = Popen(args=["/usr/bin/ssh", "globus", "transfer"] 
+                 + opts
+                 + ["--label={:s}".format(label)],
                     universal_newlines=True,
                     stdin=PIPE)
     p.communicate(input=transfer)
