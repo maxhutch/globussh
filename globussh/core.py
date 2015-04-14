@@ -1,18 +1,27 @@
 from subprocess import call, check_output, Popen, PIPE
 
-def globus_exists(path):
+def exists(path):
     foo = check_output(args=["/usr/bin/ssh", "globus", "ls {:s}".format(path)])
     return not len(foo) == 0
 
 
-def transfer_sync(transfer, 
-                  label="globussh_sync", 
-                  activate=False, 
-                  sync=3,
-                  deadline=None,
-                  encrypt=False,
-                  verify=False,
-                  delete=False):
+def wait(taskid):
+  return call(args=["/usr/bin/ssh", "globus", "wait -q {:s}".format(taskid)])
+
+
+def cancel(taskid):
+  return call(args=["/usr/bin/ssh", "globus", "cancel {:s}".format(taskid)])
+
+
+def transfer(transfer, 
+             label="globussh_transfer", 
+             activate=False, 
+             sync=3,
+             deadline=None,
+             encrypt=False,
+             verify=False,
+             delete=False,
+             block=True):
     taskid = check_output(args=["/usr/bin/ssh",
                                 "globus",
                                 "transfer --generate-id"]
@@ -41,18 +50,27 @@ def transfer_sync(transfer,
                     stdin=PIPE)
     p.communicate(input=transfer)
     p.wait()
-    call(args=["/usr/bin/ssh", "globus", "wait -q {:s}".format(taskid)])
+
+    if block:
+      wait(taskid)
+    return taskid
 
 
-def transfer_async(transfer,
-                   label="globussh_async", 
-                   activate=False, 
-                   sync=3,
-                   deadline=None,
-                   encrypt=False,
-                   verify=False,
-                   delete=False):
+def scp(source,
+        dest,
+        label="globussh_scp", 
+        activate=False, 
+        sync=3,
+        deadline=None,
+        encrypt=False,
+        verify=False,
+        delete=False,
+        recursive=False,
+        block=True):
+
     opts = []
+    if recursive:
+      opts.append("-r")
     if sync is not None:
       opts.append("-s {:d}".format(sync))
     if activate:
@@ -67,11 +85,38 @@ def transfer_async(transfer,
       opts.append("--no-verify-checksum")
     if delete:
       opts.append("--delete")
+    if not block:
+      opts.append("-D")
 
-    p = Popen(args=["/usr/bin/ssh", "globus", "transfer"] 
+    return call(args=["/usr/bin/ssh", "globus", "scp"] 
                  + opts
-                 + ["--label={:s}".format(label)],
-                    universal_newlines=True,
-                    stdin=PIPE)
-    p.communicate(input=transfer)
-    p.wait()
+                 + [source, dest]) 
+
+def rm(path,
+       label="globussh_rm", 
+       activate=False, 
+       ignore=False,
+       deadline=None,
+       recursive=False,
+       block=True):
+
+    opts = []
+    if recursive:
+      opts.append("-r")
+    if ignore:
+      opts.append("-f")
+    if activate:
+      opts.append("-g")
+    if deadline is not None:
+      opts.append("-d {:s}".format(deadline))
+    if not block:
+      opts.append("-D")
+
+    return call(args=["/usr/bin/ssh", "globus", "rm"] 
+                 + opts
+                 + [path]) 
+
+
+def rename(old, new):
+    return call(args=["/usr/bin/ssh", "globus", "rename"] 
+                 + [old, new])
