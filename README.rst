@@ -8,9 +8,11 @@ Example
 -------
 .. code:: python
 
-   >>> from globussh import transfer_sync
-   >>> transfer = "globusid#endpoint1/path/to/file1 glbousid#endpoint2/path/to/file2"
-   >>> transfer_sync(transfer, label="example_transfer")
+   >>> from globussh import transfer
+   >>> src = "globusid#endpoint1/path/to/file1"
+   >>> dst = "glbousid#endpoint2/path/to/file2"
+   >>> transfer("{:s} {:s}".format(src, dst), label="example_transfer")
+   >>> scp(src, dst, label="example_scp")
 
 Install
 -------
@@ -20,6 +22,13 @@ Install
 ::
 
     pip install globussh
+
+``globush`` expects ssh to have a host ``globus`` in ``~/.ssh/config``, e.g.:
+
+::
+    host globus
+    HostName cli.globusonline.org
+    User maxhutch
 
 .. |Version Status| image:: https://pypip.in/v/globussh/badge.png
    :target: https://pypi.python.org/pypi/globussh/
