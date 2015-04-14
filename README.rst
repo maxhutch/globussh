@@ -26,6 +26,7 @@ Install
 ``globush`` expects ssh to have a host ``globus`` in ``~/.ssh/config``, e.g.:
 
 ::
+
     host globus
     HostName cli.globusonline.org
     User maxhutch
