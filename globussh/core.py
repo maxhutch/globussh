@@ -1,4 +1,4 @@
-from subprocess import call, check_output, Popen, PIPE
+from subprocess import call, check_output, Popen, PIPE, STDOUT, check_call
 
 def exists(path):
     foo = check_output(args=["/usr/bin/ssh", "globus", "ls {:s}".format(path)])
@@ -6,11 +6,14 @@ def exists(path):
 
 
 def wait(taskid):
-  return call(args=["/usr/bin/ssh", "globus", "wait -q {:s}".format(taskid)])
-
+  ret = check_output(args=["/usr/bin/ssh", "globus", "wait -q {:s}".format(taskid)],
+                     stderr=STDOUT)
+  if ret == "Error: No such task id '{:s}'".format(taskid):
+    raise RuntimeError("Tried to wait on a task that doesn't exist")
+  return
 
 def cancel(taskid):
-  return call(args=["/usr/bin/ssh", "globus", "cancel {:s}".format(taskid)])
+  return check_call(args=["/usr/bin/ssh", "globus", "cancel {:s}".format(taskid)])
 
 
 def transfer(transfer, 
@@ -88,7 +91,7 @@ def scp(source,
     if not block:
       opts.append("-D")
 
-    return call(args=["/usr/bin/ssh", "globus", "scp"] 
+    return check_call(args=["/usr/bin/ssh", "globus", "scp"] 
                  + opts
                  + [source, dest]) 
 
@@ -112,11 +115,11 @@ def rm(path,
     if not block:
       opts.append("-D")
 
-    return call(args=["/usr/bin/ssh", "globus", "rm"] 
+    return check_call(args=["/usr/bin/ssh", "globus", "rm"] 
                  + opts
                  + [path]) 
 
 
 def rename(old, new):
-    return call(args=["/usr/bin/ssh", "globus", "rename"] 
+    return check_call(args=["/usr/bin/ssh", "globus", "rename"] 
                  + [old, new])
