@@ -4,6 +4,9 @@ def exists(path):
     foo = check_output(args=["/usr/bin/ssh", "globus", "ls {:s}".format(path)])
     return not len(foo) == 0
 
+def ls(path):
+    foo = check_output(args=["/usr/bin/ssh", "globus", "ls {:s}".format(path)])
+    return foo.decode("utf-8").split("\n")[0:-1]
 
 def wait(taskid):
   ret = check_output(args=["/usr/bin/ssh", "globus", "wait -q {:s}".format(taskid)],
